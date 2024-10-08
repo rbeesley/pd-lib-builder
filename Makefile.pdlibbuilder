@@ -1,5 +1,5 @@
 # Makefile.pdlibbuilder dated 2019-12-21
-version = 0.7.0
+version = 0.7.0-wsl
 
 # Helper makefile for Pure Data external libraries.
 # Written by Katja Vetter March-June 2015 for the public domain. No warranties.
@@ -607,14 +607,14 @@ ifeq ($(system), Windows)
   extension = dll
   c.flags :=
   c.ldflags := -static-libgcc -shared \
-    -Wl,--enable-auto-import "$(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll"
+    -Wl,--enable-auto-import $(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll
   c.ldlibs :=
   cxx.flags := -fcheck-new
   cxx.ldflags := -static-libgcc -static-libstdc++ -shared \
-    -Wl,--enable-auto-import "$(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll"
+    -Wl,--enable-auto-import $(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll
   cxx.ldlibs :=
   shared.extension = dll
-  shared.ldflags := -static-libgcc -shared "$(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll"
+  shared.ldflags := -static-libgcc -shared $(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll
   stripflags = --strip-all
 endif
 
@@ -631,7 +631,7 @@ PDINCLUDEDIR ?= $(pdincludepath)
 PDLIBDIR ?= $(firstword $(objectsdir) $(pkglibdir))
 
 ifdef PDDIR
-  PDINCLUDEDIR := $(wildcard $(PDDIR)/src)
+  PDINCLUDEDIR ?= $(wildcard $(PDDIR)/src)
 endif
 
 # base path where all components of the lib will be installed by default
@@ -662,7 +662,7 @@ endif
 CFLAGS = $(warn.flags) $(optimization.flags) $(arch.c.flags)
 
 # preprocessor flags
-cpp.flags := -DPD -I "$(PDINCLUDEDIR)" $(floatsize.flags) $(cpp.flags) $(CPPFLAGS)
+cpp.flags := -DPD -I $(PDINCLUDEDIR) $(floatsize.flags) $(cpp.flags) $(CPPFLAGS)
 
 # flags for dependency checking (cflags from makefile may define -I options)
 depcheck.flags := $(cpp.flags) $(cflags)
@@ -808,14 +808,20 @@ else
   goals := all
 endif
 
+# Debug string check
+$(info ++++ info: PDDIR : $(PDDIR))
+$(info ++++ info: PDINCLUDEDIR : $(PDINCLUDEDIR))
+$(info ++++ info: PDBINDIR : $(PDBINDIR))
+$(info ++++ info: PDLIBDIR : $(PDLIBDIR))
+
 # store path to Pd API m_pd.h if it is found
 ifdef PDINCLUDEDIR
-  mpdh := $(shell ls "$(PDINCLUDEDIR)/m_pd.h")
+  mpdh := $(shell ls $(PDINCLUDEDIR)/m_pd.h)
 endif
 
 # store path to pd.dll; if not found, ls will give a useful error
 ifeq ($(system), Windows)
-  pddll := $(shell ls "$(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll")
+  pddll := $(shell ls $(PDBINDIR)/pd$(filter-out 32,$(floatsize)).dll)
 endif
 
 # when making target all, check if m_pd.h is found and print info about it
